@@ -1,6 +1,8 @@
 #include <SoftwareSerial.h>
 #include <TinyGPS.h>
 #include "bearingCalc.h"
+//TRANSMITTER
+#include <VirtualWire.h>
 
 float latDest = 0;
 float lonDest = 0;
@@ -27,6 +29,9 @@ const int motor2B = 7;
 const int PWM1 = 3;
 const int PWM2 = 5;
 
+//Transmitter
+const int TRNS = 9;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -37,6 +42,9 @@ void setup() {
   pinMode(motor2B, OUTPUT);
   pinMode(PWM1, OUTPUT);
   pinMode(PWM2, OUTPUT);
+  vw_set_ptt_inverted(true); // Required by the RF module
+  vw_setup(2000); // bps connection speed
+  vw_set_tx_pin(TRNS); // Arduino pin to connect the receiver data pin
 }
 
 void loop() {
@@ -50,8 +58,9 @@ void loop() {
 //Motor forward start
 
 void forward(int allSpeed) {
-
-  calculateWeight(getPID(getErrorMargin(latDest, lonDest)), allSpeed);
+  float errorMargin = getErrorMargin(latDest, lonDest);
+  transmitMessage("ErrorMargin: " + errorMargin);
+  calculateWeight(getPID(errorMargin), allSpeed);
   //Write to digital pin, for rotating motors forward
   digitalWrite(motor1A, LOW);
   digitalWrite(motor1B, HIGH);
@@ -141,8 +150,16 @@ void calculateWeight(float pid, int allSpeed) {
     leftMotorSpeed = 100;
   }
 
+  transmitMessage("PID: " + pid);
 
+}
 
+void transmitMessage(const char *text){
+   //Message to send:
+   const char *msg = text;
+   vw_send((uint8_t *)msg, strlen(msg));
+   vw_wait_tx(); // We wait to finish sending the message
+   
 }
 
 //PID START
