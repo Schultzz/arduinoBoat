@@ -55,8 +55,8 @@ void loop() {
 
 
   while (!gpsSignal()) {};
-  straightForward(100);
-  forward(100);
+  straightForward(250);
+  forward(250);
   Serial.println("end");
 
 }
@@ -190,7 +190,7 @@ void calculateWeight(float pid, int allSpeed) {
   char *result = (char *) malloc(sizeof(char[255]));
   char *floatVal = (char *) malloc(sizeof(char[255]));
   floatToString(pid).toCharArray(floatVal, 255);
-  strcat(result, "ErrorMargin: ");
+  strcat(result, "PID: ");
   Serial.println(floatVal);  
   strcat(result, floatVal);
   transmitMessage(result);
