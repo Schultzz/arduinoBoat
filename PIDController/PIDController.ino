@@ -3,9 +3,10 @@
 #include "bearingCalc.h"
 //TRANSMITTER
 #include <VirtualWire.h>
+#include <String.h>
 
-float latDest = 0;
-float lonDest = 0;
+float latDest = 55.782637;
+float lonDest = 12.513893;
 
 const float Kp = .4f; //2.0
 const float Ki = 2.0f; //4.0
@@ -49,17 +50,52 @@ void setup() {
 
 void loop() {
 
+
+
+
+
   while (!gpsSignal()) {};
-  forward(350);
+  straightForward(100);
+  forward(100);
   Serial.println("end");
 
+}
+
+String floatToString(float floatVal){
+
+  
+  char charVal[10];               //temporarily holds data from vals 
+  String stringVal = "";     //data on buff is copied to this string
+  
+  dtostrf(floatVal, 4, 3, charVal);  //4 is mininum width, 3 is precision; float value is copied onto buff
+  //display character array
+  
+  //convert chararray to string
+  for(int i=0;i<sizeof(charVal);i++)
+  {
+    stringVal+=charVal[i];
+  }
+  return stringVal;
+  
 }
 
 //Motor forward start
 
 void forward(int allSpeed) {
   float errorMargin = getErrorMargin(latDest, lonDest);
-  transmitMessage("ErrorMargin: " + errorMargin);
+  
+  //Code for transmitting the errorMargin
+  char *result = (char *) malloc(sizeof(char[255]));
+  char *floatVal = (char *) malloc(sizeof(char[255]));
+  floatToString(errorMargin).toCharArray(floatVal, 255);
+  strcat(result, "ErrorMargin: ");
+  Serial.println(floatVal);  
+  strcat(result, floatVal);
+  transmitMessage(result);
+  free(result);
+  free(floatVal);
+  //Transmit end
+  
   calculateWeight(getPID(errorMargin), allSpeed);
   //Write to digital pin, for rotating motors forward
   digitalWrite(motor1A, LOW);
@@ -67,7 +103,7 @@ void forward(int allSpeed) {
   digitalWrite(motor2A, LOW);
   digitalWrite(motor2B, HIGH);
 
-  straightForward(allSpeed);
+  
 
   //Write the calculated speed to analog pins.
   analogWrite(PWM1, rightMotorSpeed);
@@ -81,7 +117,7 @@ void straightForward(int allSpeed){
   analogWrite(PWM1, allSpeed / 2);
   analogWrite(PWM2, allSpeed / 2);
 
-delay(2000);
+  delay(2500);
   
   }
 
@@ -150,8 +186,17 @@ void calculateWeight(float pid, int allSpeed) {
     leftMotorSpeed = 100;
   }
 
-  transmitMessage("PID: " + pid);
-
+  //Code for transmitting the PID
+  char *result = (char *) malloc(sizeof(char[255]));
+  char *floatVal = (char *) malloc(sizeof(char[255]));
+  floatToString(pid).toCharArray(floatVal, 255);
+  strcat(result, "ErrorMargin: ");
+  Serial.println(floatVal);  
+  strcat(result, floatVal);
+  transmitMessage(result);
+  free(result);
+  free(floatVal);
+  //Transmit end
 }
 
 void transmitMessage(const char *text){
