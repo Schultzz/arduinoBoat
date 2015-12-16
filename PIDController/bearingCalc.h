@@ -3,7 +3,7 @@
 #include <TinyGPS.h>
 
 TinyGPS gps;
-SoftwareSerial ss(4, 3);
+SoftwareSerial ss(13, 12);
 
 float oldLat = 0;
 float oldLon = 0;
@@ -17,13 +17,10 @@ float curBearing, goalBearing;
 float flat, flon;
 unsigned long age;
 
-boolean gpsSignal() {
-
-  if (curLat != 0) {
-    return true;
+void setupThis(){
+  Serial.println("setupTHIS123");
+  ss.begin(9600);
   }
-  return false;
-}
 
 static void smartdelay(unsigned long ms)
 {
@@ -34,6 +31,21 @@ static void smartdelay(unsigned long ms)
       gps.encode(ss.read());
   }
   while (millis() - start < ms);
+}
+
+    float flat1 = 1000.00;
+    float flon1;
+    unsigned long age1;
+
+boolean gpsSignal() {
+
+  while(flat1 == 1000.00){
+    gps.f_get_position(&flat1, &flon1, &age1);
+    smartdelay(300);
+    Serial.print("her: ");
+    Serial.println(flat1);
+  }
+  return true;
 }
 
 //Udregner Bearing

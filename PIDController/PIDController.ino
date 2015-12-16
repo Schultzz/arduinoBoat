@@ -1,3 +1,5 @@
+#include <SoftwareSerial.h>
+#include <TinyGPS.h>
 #include "bearingCalc.h"
 
 float latDest = 0;
@@ -27,7 +29,8 @@ const int PWM2 = 5;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600);
+  Serial.begin(115200);
+  setupThis();
   pinMode(motor1A, OUTPUT);
   pinMode(motor1B, OUTPUT);
   pinMode(motor2A, OUTPUT);
@@ -55,7 +58,7 @@ void forward(int allSpeed) {
   digitalWrite(motor2A, LOW);
   digitalWrite(motor2B, HIGH);
 
-  straightForward(allSpped);
+  straightForward(allSpeed);
 
   //Write the calculated speed to analog pins.
   analogWrite(PWM1, rightMotorSpeed);
@@ -72,6 +75,7 @@ void straightForward(int allSpeed){
 delay(2000);
   
   }
+
 
 //Motor farword end
 
