@@ -1,26 +1,22 @@
 #include <math.h>
-#include <SoftwareSerial.h>
-#include <TinyGPS.h>
 
 TinyGPS gps;
 SoftwareSerial ss(13, 12);
 
-float oldLat = 0;
-float oldLon = 0;
+float curLat = 1000.00;
+int noSignal = 2;
+int gpsSignalDelay = 500;
 
-float curLat = 0;
-float curLon = 0;
-
-float goalLat, goalLon;
-float curBearing, goalBearing;
-
-float flat, flon;
+float curLon, oldLon, oldLat;
+float goalLat, goalLon, curBearing, goalBearing, flat, flon;
 unsigned long age;
 
 void setupThis(){
-  Serial.println("setupTHIS123");
+  Serial.println("setupThis - bearingCalc.h");
   ss.begin(9600);
   }
+
+// SmartDelay START:::::
 
 static void smartdelay(unsigned long ms)
 {
@@ -33,20 +29,22 @@ static void smartdelay(unsigned long ms)
   while (millis() - start < ms);
 }
 
-    float flat1 = 1000.00;
-    float flon1;
-    unsigned long age1;
+// SmartDelay END:::::
+
+// gpsSignal START:::::
 
 boolean gpsSignal() {
 
-  while(flat1 == 1000.00){
-    gps.f_get_position(&flat1, &flon1, &age1);
-    smartdelay(300);
+  while(curLat == noSignal){
+    gps.f_get_position(&curLat, &curLon, &age);
+    smartdelay(100);
     Serial.print("her: ");
-    Serial.println(flat1);
+    Serial.println(curLat);
   }
   return true;
 }
+
+// gpsSignal END:::::
 
 //Udregner Bearing
 double CalculateHeading(float lat1, float long1, float lat2, float long2)
@@ -68,47 +66,19 @@ double CalculateHeading(float lat1, float long1, float lat2, float long2)
   }
 }
 
-float getErrorMargin(float goalLt, float goalLn) {
+float getErrorMargin(float goalLon, float goalLat) {
 
-  if (curLat == 0) {
-
-    float flat, flon;
-    unsigned long age;
-    gps.f_get_position(&flat, &flon, &age);
-
-    while (flat == 1000) {
-      gps.f_get_position(&flat, &flon, &age);
-      smartdelay(200);
-    };
-
-    curLat = flat;
-    curLon = flon;
-
-    smartdelay(1000);
-
-    return 0.0f;
-  }
-  else {
     oldLat = curLat;
     oldLon = curLon;
+    
+    gps.f_get_position(&curLat, &curLon, &age);
+    smartdelay(gpsSignalDelay);
 
-    float flat, flon;
-    unsigned long age;
-    gps.f_get_position(&flat, &flon, &age);
-    smartdelay(2000);
+    float oldCurBearing = CalculateHeading(curLat, curLon, oldLat, oldLon);
 
-    curLat = flat;
-    curLon = flon;
-
-    float oldCurBearing;
-    float curGoalBearing;
-
-    oldCurBearing = CalculateHeading(curLat, curLon, oldLat, oldLon);
-
-    curGoalBearing = CalculateHeading(curLat, curLon, goalLon, goalLat);
+    float curGoalBearing = CalculateHeading(curLat, curLon, goalLon, goalLat);
 
     return curGoalBearing - oldCurBearing;
-
-  }
-
 }
+
+

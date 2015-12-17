@@ -33,16 +33,19 @@ const int PWM2 = 5;
 //Transmitter
 const int TRNS = 9;
 
+int delayPID = 400;
+
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
   setupThis();
+
   pinMode(motor1A, OUTPUT);
   pinMode(motor1B, OUTPUT);
   pinMode(motor2A, OUTPUT);
   pinMode(motor2B, OUTPUT);
   pinMode(PWM1, OUTPUT);
   pinMode(PWM2, OUTPUT);
+  
   vw_set_ptt_inverted(true); // Required by the RF module
   vw_setup(2000); // bps connection speed
   vw_set_tx_pin(TRNS); // Arduino pin to connect the receiver data pin
@@ -50,12 +53,8 @@ void setup() {
 
 void loop() {
 
-
-
-
-
   while (!gpsSignal()) {};
-  straightForward(250);
+  //straightForward(250);
   forward(250);
   Serial.println("end");
 
@@ -85,10 +84,11 @@ void forward(int allSpeed) {
   float errorMargin = getErrorMargin(latDest, lonDest);
   
   //Code for transmitting the errorMargin
-  char *result = (char *) malloc(sizeof(char[255]));
-  char *floatVal = (char *) malloc(sizeof(char[255]));
-  floatToString(errorMargin).toCharArray(floatVal, 255);
+  char *result = (char *) malloc(sizeof(char[20]));
+  char *floatVal = (char *) malloc(sizeof(char[20]));
+  floatToString(errorMargin).toCharArray(floatVal, 20);
   strcat(result, "ErrorMargin: ");
+  Serial.print("ErrorNum1: ");
   Serial.println(floatVal);  
   strcat(result, floatVal);
   transmitMessage(result);
@@ -109,7 +109,7 @@ void forward(int allSpeed) {
   analogWrite(PWM1, rightMotorSpeed);
   analogWrite(PWM2, leftMotorSpeed);
 
-  delay(3000);
+  delay(delayPID);
 }
 
 void straightForward(int allSpeed){
@@ -117,7 +117,7 @@ void straightForward(int allSpeed){
   analogWrite(PWM1, allSpeed / 2);
   analogWrite(PWM2, allSpeed / 2);
 
-  delay(2500);
+  delay(delayPID);
   
   }
 
@@ -127,7 +127,7 @@ void straightForward(int allSpeed){
 //Calculate motor weight
 
 void calculateWeight(float pid, int allSpeed) {
-  Serial.println(pid);
+
   float straight = 0.5f;
   float smallTurnA = 0.6f;
   float smallTurnB = 0.4f;
@@ -138,31 +138,31 @@ void calculateWeight(float pid, int allSpeed) {
 
 
   if (pid > 5.0f && pid < 10.0f) {
-    Serial.println("1");
+    Serial.println(":1");
     //drej lidt
     rightMotorWeight = smallTurnA;
     leftMotorWeight = smallTurnB;
   }
   else if (pid > 10.0f) {
-    Serial.println("2");
+    Serial.println(":2");
     //drej meget
     rightMotorWeight = largeTurnA;
     leftMotorWeight = largeTurnB;
   }
   else if (pid > -5.0f && pid < -10.0f) {
-    Serial.println("3");
+    Serial.println(":3");
     //drej lidt
     rightMotorWeight = smallTurnB;
     leftMotorWeight = smallTurnA;
   }
   else if (pid > -10.0f) {
-    Serial.println("4");
+    Serial.println(":4");
     //drej meget
     rightMotorWeight = largeTurnB;
     leftMotorWeight = largeTurnA;
   }
   else { //limits: (pid<5.0f && pid>-5.0f)
-    Serial.println("5");
+    Serial.println(":5");
     //lige meget
     rightMotorWeight = straight;
     leftMotorWeight = straight;
@@ -191,6 +191,7 @@ void calculateWeight(float pid, int allSpeed) {
   char *floatVal = (char *) malloc(sizeof(char[255]));
   floatToString(pid).toCharArray(floatVal, 255);
   strcat(result, "PID: ");
+  Serial.print("PID: ");
   Serial.println(floatVal);  
   strcat(result, floatVal);
   transmitMessage(result);
@@ -232,4 +233,6 @@ float getPID(float error) {
 }
 
 //PID END
+
+
 
